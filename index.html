@@ -411,6 +411,13 @@ legend{padding:0;margin-bottom:.55em}
 .gbtn{display:inline-flex;align-items:center;justify-content:center;gap:.75em;min-height:3.1em;padding:0 1.4em;border-radius:10px;border:1px solid var(--line2);background:var(--card);font-weight:600;font-size:1em;box-shadow:var(--sh);width:100%}
 .gbtn:hover{background:var(--soft)}
 .gbtn[disabled]{opacity:.6}
+.or{display:flex;align-items:center;gap:.8em;width:100%;color:var(--muted);font-size:.86em}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.emf{display:flex;flex-direction:column;gap:.8em;width:100%;text-align:left}
+.emf .acts .b{flex:1}
+.signin-card .note{text-align:center}
+.signin-card .err{text-align:center}
+.pwbox{display:flex;flex-direction:column;gap:.6em;background:var(--soft);border-radius:12px;padding:1em 1.1em}
 </style>
 
 </head>
@@ -423,26 +430,60 @@ window.MD_FIREBASE = {"apiKey": "AIzaSyCTkYvCA6YBqoVSsCihb4oHLmRZNrcBz5I", "auth
   var V = "10.14.1", B = "https://www.gstatic.com/firebasejs/" + V + "/";
   function load(src) { return new Promise(function (res, rej) { var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = function () { rej(new Error("net")) }; document.head.appendChild(s) }) }
   function app() { return document.getElementById("app") }
+  function $(id) { return document.getElementById(id) }
   function e(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] }) }
   var G = '<svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-2.9-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.8l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>';
+  var MSG = {
+    "auth/invalid-email": "That email address doesn’t look right.",
+    "auth/missing-password": "Enter your password.",
+    "auth/weak-password": "Use a password with at least 6 characters.",
+    "auth/invalid-credential": "Wrong email or password. If you’ve only used Google so far, add a password first (see below).",
+    "auth/wrong-password": "Wrong email or password.",
+    "auth/user-not-found": "Wrong email or password. If you’ve only used Google so far, add a password first (see below).",
+    "auth/email-already-in-use": "This email already has an account. Use Sign in instead. If you’ve only used Google with it, add a password first (see below).",
+    "auth/too-many-requests": "Too many tries. Wait a few minutes and try again.",
+    "auth/operation-not-allowed": "Email sign-in isn’t switched on yet. In Firebase, open Authentication → Sign-in method and enable Email/Password.",
+    "auth/unauthorized-domain": "This website isn’t on the sign-in allow list yet. In Firebase, open Authentication → Settings → Authorized domains and add this site’s address.",
+    "auth/network-request-failed": "No internet connection. Check it and try again."
+  };
+  function msg(er) { var c = er && er.code; return MSG[c] || ("Sign-in didn’t work (" + (c || "unknown error") + "). Try again.") }
   function screen(inner) {
     app().innerHTML = '<main class="signin gut"><div class="signin-card card"><div class="brand" style="font-size:2.2em">MedDecks</div>' + inner + '</div></main>';
   }
-  function showSignIn(auth, err) {
+  function showSignIn(auth, err, emailOpen) {
     screen('<p class="signin-sub">Practice tests for medical school. Sign in to keep your decks and scores in sync on your phone, iPad and laptop.</p>' +
       '<button type="button" class="gbtn" id="gsi">' + G + '<span>Continue with Google</span></button>' +
-      (err ? '<div class="err" role="alert">' + e(err) + '</div>' : '') +
-      '<div class="note">Only you can see your decks and scores.</div>');
-    document.getElementById("gsi").onclick = function () {
-      var p = new firebase.auth.GoogleAuthProvider();
+      '<div class="or"><span>or</span></div>' +
+      '<form class="emf" id="emf" novalidate' + (emailOpen ? '' : ' hidden') + '>' +
+        '<div class="fld"><label for="em">Email</label><input id="em" type="email" autocomplete="username" inputmode="email"></div>' +
+        '<div class="fld"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"></div>' +
+        '<div class="acts"><button type="submit" class="b p" id="esi">Sign in</button><button type="button" class="b" id="ecr">Create account</button></div>' +
+        '<button type="button" class="link" id="fgt" style="align-self:center">Forgot password?</button>' +
+      '</form>' +
+      '<button type="button" class="link" id="emt"' + (emailOpen ? ' hidden' : '') + '>Sign in with email and password</button>' +
+      (err ? '<div class="err" role="alert" id="aerr">' + e(err) + '</div>' : '<div class="err" role="alert" id="aerr" hidden></div>') +
+      '<div class="note">Already use Google on another device? Sign in there, tap your picture → <b>Add a password</b>, then use that email and password here. Same account, same decks.</div>');
+    function showErr(t) { var x = $("aerr"); x.textContent = t; x.hidden = false }
+    $("emt").onclick = function () { $("emf").hidden = false; this.hidden = true; $("em").focus() };
+    $("gsi").onclick = function () {
+      var p = new firebase.auth.GoogleAuthProvider(), btn = this;
       p.setCustomParameters({ prompt: "select_account" });
-      this.disabled = true;
+      btn.disabled = true;
       auth.signInWithPopup(p).catch(function (er) {
+        btn.disabled = false;
         var c = er && er.code;
-        if (c === "auth/popup-blocked" || c === "auth/operation-not-supported-in-this-environment" || c === "auth/cancelled-popup-request") return auth.signInWithRedirect(p);
-        if (c === "auth/popup-closed-by-user") return showSignIn(auth);
-        showSignIn(auth, c === "auth/unauthorized-domain" ? "This website isn’t on the sign-in allow list yet. In Firebase, open Authentication → Settings → Authorized domains and add this site’s address." : "Sign-in didn’t work (" + (c || "unknown error") + "). Try again.");
+        if (c === "auth/popup-closed-by-user" || c === "auth/cancelled-popup-request") return;
+        if (c === "auth/popup-blocked" || c === "auth/operation-not-supported-in-this-environment" || c === "auth/web-storage-unsupported" || c === "auth/internal-error")
+          return showSignIn(auth, "Google sign-in can’t open on this device. Use email and password below instead.", true);
+        showErr(msg(er));
       });
+    };
+    function creds() { return { em: $("em").value.trim(), pw: $("pw").value } }
+    $("emf").onsubmit = function (ev) { ev.preventDefault(); var c = creds(); auth.signInWithEmailAndPassword(c.em, c.pw).catch(function (er) { showErr(msg(er)) }) };
+    $("ecr").onclick = function () { var c = creds(); auth.createUserWithEmailAndPassword(c.em, c.pw).catch(function (er) { showErr(msg(er)) }) };
+    $("fgt").onclick = function () {
+      var em = $("em").value.trim(); if (!em) { showErr("Type your email above, then tap Forgot password again."); return }
+      auth.sendPasswordResetEmail(em).then(function () { var x = $("aerr"); x.hidden = false; x.className = "note"; x.textContent = "Check your email for a link to set a new password." }).catch(function (er) { showErr(msg(er)) });
     };
   }
   window.MD_BOOT = function () {
@@ -452,17 +493,25 @@ window.MD_FIREBASE = {"apiKey": "AIzaSyCTkYvCA6YBqoVSsCihb4oHLmRZNrcBz5I", "auth
       var fs = firebase.firestore();
       try { fs.enablePersistence({ synchronizeTabs: true }).catch(function () { }) } catch (x) { }
       var auth = firebase.auth(), started = false;
-      auth.getRedirectResult().catch(function (er) { showSignIn(auth, "Sign-in didn’t work (" + (er && er.code || "unknown error") + "). Try again.") });
       auth.onAuthStateChanged(function (u) {
         if (!u) { if (started) { location.reload(); return } showSignIn(auth); return }
         if (started) return; started = true;
-        window.MD_ACCOUNT = { uid: u.uid, name: u.displayName || "", email: u.email || "", photo: u.photoURL || "", signOut: function () { auth.signOut() } };
+        var hasPw = (u.providerData || []).some(function (p) { return p && p.providerId === "password" });
+        window.MD_ACCOUNT = {
+          uid: u.uid, name: u.displayName || "", email: u.email || "", photo: u.photoURL || "", hasPassword: hasPw,
+          signOut: function () { auth.signOut() },
+          addPassword: function (pw) {
+            var cred = firebase.auth.EmailAuthProvider.credential(u.email, pw);
+            return u.linkWithCredential(cred).then(function () { window.MD_ACCOUNT.hasPassword = true });
+          },
+          errorText: msg
+        };
         var base = "users/" + u.uid + "/";
         window.MD_START({ doc: function (p) { return fs.doc(base + p) }, collection: function (p) { return fs.collection(base + p) } });
       });
     }).catch(function () {
       screen('<p class="signin-sub">Couldn’t reach the sign-in service. Check your internet connection.</p><button type="button" class="b p" id="rt">Try again</button>');
-      document.getElementById("rt").onclick = function () { location.reload() };
+      $("rt").onclick = function () { location.reload() };
     });
   };
 })();
@@ -638,7 +687,23 @@ function wireNav(){
   on("home",renderHome);
   on("imp",openImport);
   on("addsub",addSubject);
-  on("acct",function(){var a=window.MD_ACCOUNT;dialog('<div class="cap">Account</div><h2 id="dt">'+esc(a.name||"Signed in")+'</h2><div class="muted">'+esc(a.email||"")+'</div><div class="note">Your decks and scores are saved to this Google account and sync to every device where you sign in.</div><div class="acts"><button type="button" class="b" id="so">Sign out</button><button type="button" class="b p" id="sc">Close</button></div>',function(close){on("sc",close);on("so",function(){close();a.signOut()})})});
+  on("acct",accountDialog);
+}
+
+function accountDialog(){
+  var a=window.MD_ACCOUNT;
+  dialog('<div class="cap">Account</div><h2 id="dt">'+esc(a.name||"Signed in")+'</h2><div class="muted">'+esc(a.email||"")+'</div>'+
+    '<div class="note">Your decks and scores are saved to this account and sync to every device where you sign in.</div>'+
+    (a.addPassword&&a.email?(a.hasPassword?'<div class="note"><b>Email sign-in is on.</b> On any device you can also sign in with '+esc(a.email)+' and your password.</div>':
+      '<div class="pwbox"><b>Add a password</b><div class="note">For devices where Google sign-in won’t open (like iPad Safari). You’ll sign in there with '+esc(a.email)+' and this password, and see the same decks.</div>'+
+      '<div class="fld"><label for="npw">New password (at least 6 characters)</label><input id="npw" type="password" autocomplete="new-password"></div><button type="button" class="b p" id="setpw">Save password</button><div class="err" id="pwerr" hidden></div></div>'):'')+
+    '<div class="acts"><button type="button" class="b" id="so">Sign out</button><button type="button" class="b" id="sc">Close</button></div>',
+  function(close){on("sc",close);on("so",function(){close();a.signOut()});
+    on("setpw",function(){var pw=$("npw").value,b=$("setpw"),er=$("pwerr");
+      if(pw.length<6){er.textContent="Use at least 6 characters.";er.hidden=false;return}
+      b.disabled=true;b.textContent="Saving…";
+      a.addPassword(pw).then(function(){close();toast("Password saved. Use it to sign in on your iPad.")}).catch(function(e){b.disabled=false;b.textContent="Save password";
+        er.textContent=e&&e.code==="auth/requires-recent-login"?"For safety, sign out and sign back in with Google, then add the password right away.":e&&e.code==="auth/provider-already-linked"?"This account already has a password.":(a.errorText?a.errorText(e):"Couldn’t save the password.");er.hidden=false})})});
 }
 
 /* ---------- home ---------- */

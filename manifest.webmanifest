@@ -1,0 +1,23 @@
+{
+  "name": "MedDecks",
+  "short_name": "MedDecks",
+  "description": "Practice tests for medical school.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F6F7F9",
+  "theme_color": "#1B2F55",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

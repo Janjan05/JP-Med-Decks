@@ -1,5 +1,5 @@
-/* MedDecks offline helper. Build bf7b13cef0 */
-var CACHE="meddecks-bf7b13cef0";
+/* MedDecks offline helper. Build 04932dc6fe */
+var CACHE="meddecks-04932dc6fe";
 var CORE=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png","covers/anatomy-s.jpg","covers/anatomy.jpg","covers/biochemistry-s.jpg","covers/biochemistry.jpg","covers/histology-s.jpg","covers/histology.jpg","covers/physiology-s.jpg","covers/physiology.jpg","covers/preventive-s.jpg","covers/preventive.jpg"];
 self.addEventListener("install",function(e){e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(CORE)}).then(function(){return self.skipWaiting()}))});
 self.addEventListener("activate",function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE&&k.indexOf("meddecks-")===0}).map(function(k){return caches.delete(k)}))}).then(function(){return self.clients.claim()}))});

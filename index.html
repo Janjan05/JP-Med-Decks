@@ -14,7 +14,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MedDecks">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="md-build" content="f9018ac73b">
+<meta name="md-build" content="04932dc6fe">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Libre+Franklin:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;display=swap">
@@ -173,6 +173,13 @@ mark{background:var(--hl);color:inherit;padding:0 2px}
 .cvr.tint img{filter:grayscale(1) contrast(1.05);mix-blend-mode:luminosity;opacity:.9}
 .cvr .art{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%}
 
+/* iPad Safari does not stretch the children of a <button> laid out as a column; give them full width explicitly */
+.subj>*,.subj-b>*,.artb>*,.thb>*,.qtx>*,.planc .tx>*{width:100%;align-self:stretch}
+.subj-b,.planc .tx{min-width:0}
+.planc .tx{flex:1}
+.cvr{width:100%}
+.planc .cvr{width:64px}
+
 /* ===== home ===== */
 .hero{display:grid;grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr);gap:32px;padding:32px 28px}
 .hero .vr{background:var(--ln)}
@@ -222,6 +229,7 @@ mark{background:var(--hl);color:inherit;padding:0 2px}
 .subj-b .meter{margin:6px 0 4px}
 .subj-f{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--ink2);margin-top:auto;flex-wrap:wrap}
 .subj-f b{color:var(--ink)}
+.planc .go{width:auto!important;align-self:flex-start!important}
 .addsubj{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--ln);min-height:230px;color:var(--lnk);font-weight:600;font-size:14px;background:transparent}
 .addsubj:hover{border-color:var(--pri);background:var(--sf)}
 .two{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:stretch}
